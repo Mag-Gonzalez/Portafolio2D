@@ -31,24 +31,41 @@ export const profile = {
   role: "Desarrollador Web & Móvil Full-Stack",
   location: "Medellín, Colombia",
   bio: [
-    "Construyo experiencias web creativas e interactivas, combinando desarrollo front-end de alta calidad con interfaces expressivas y animación reactiva.",
-    "Diseño y consume APIs robustas para que la interacción, los datos y la lógica de negocio convivan sin fricción en producto.",
-    "Me interesa especialmente el cruce entre UI, 3D y movimiento: crear interfaces que se sientan vivas sin sacrificar rendimiento ni accesibilidad.",
+    "Soy desarrollador de software en formación en Análisis y Desarrollo de Software (ADSO - SENA) en Medellín. Construyo experiencias web y móviles creativas, combinando interfaces expresivas en dark-mode con animación reactiva.",
+    "Diseño y consumo APIs robustas con Python/Django y Node.js/Express, integrando bases de datos relacionales y NoSQL para que la lógica de negocio, las automatizaciones y la experiencia de usuario convivan sin fricción.",
+    "Exploro el cruce entre código, 3D en Blender y estética cartoon cel-shading —influenciada por mi proyecto musical ZARFA— para crear productos digitales con identidad propia sin sacrificar rendimiento ni accesibilidad.",
   ],
 } as const;
 
 export const stack: StackCategory[] = [
   {
     category: "Frontend/UI",
-    items: ["React", "Next.js", "TypeScript", "GSAP", "Figma"],
+    items: ["React", "Next.js", "TypeScript", "GSAP", "Figma", "Canva"],
   },
   {
     category: "Backend/DB",
-    items: ["Python", "Django", "Django REST Framework", "Node.js", "Express", "MySQL", "MongoDB"],
+    items: [
+      "Python",
+      "Django",
+      "Django REST Framework",
+      "Node.js",
+      "Express",
+      "MySQL",
+      "MongoDB",
+      "SQLite",
+    ],
   },
   {
-    category: "Mobile/3D",
-    items: ["React Native", "Flutter", "Blender"],
+    category: "Mobile/3D & Tools",
+    items: [
+      "React Native",
+      "Expo",
+      "Flutter",
+      "MIT App Inventor",
+      "Blender 5.3",
+      "Git / GitHub",
+      "Docker",
+    ],
   },
 ];
 
@@ -56,17 +73,17 @@ export const portfolioProjects: PortfolioProject[] = [
   {
     id: "reserva",
     title: "ReserVa",
-    year: "2025",
+    year: "2026",
     role: "Full-Stack Developer",
     summary:
       "Plataforma integral de reservas de mesas y pre-orden gastronómica.",
     description:
-      "ReserVa centraliza disponibilidad, reservas y pre-órdenes en un solo flujo. El backend expone una API REST con Django REST Framework para la lógica de negocio y Node.js/Express para servicios de integración y notificaciones. MongoDB persiste reservas, menús y preferencias; el despliegue cloud mantiene el servicio disponible y escalable para múltiples sedes.",
-    stack: ["Django / DRF", "Node.js / Express", "MongoDB", "Despliegue cloud"],
+      "ReserVa centraliza disponibilidad, reservas y pre-órdenes en un solo flujo. El backend expone una API REST documentada con Django REST Framework para la lógica de negocio y un ecosistema en Node.js/Express con respaldos automatizados en MongoDB (node-cron) y notificaciones vía Nodemailer.",
+    stack: ["Django / DRF", "Node.js / Express", "MongoDB", "PythonAnywhere"],
     highlights: [
-      "Gestión de disponibilidad por franja horaria y sede.",
-      "Pre-orden gastronómica ligada a cada reserva.",
-      "API REST preparada para integraciones y notificaciones.",
+      "Gestión de disponibilidad por franja horaria y pre-orden gastronómica.",
+      "Backups automatizados de MongoDB con node-cron y alertas por correo.",
+      "Documentación interactiva con drf-spectacular y pruebas funcionales con pytest.",
     ],
     repoUrl: "https://github.com/Mag-Gonzalez",
     preview: {
@@ -78,17 +95,17 @@ export const portfolioProjects: PortfolioProject[] = [
   {
     id: "cerro-nutibara",
     title: "Guía Interactiva Cerro Nutibara & Pueblito Paisa",
-    year: "2024",
+    year: "2026",
     role: "Mobile Developer",
     summary:
-      "App móvil turística interactiva con rutas, puntos de interés y experiencia guiada.",
+      "App móvil turística interactiva con mapa personalizado, puntos de interés, escaneo QR y misiones.",
     description:
-      "La guía acompaña al visitante por el Cerro Nutibara y el Pueblito Paisa mediante rutas contextuales, puntos de interés y contenido guiado. La experiencia móvil prioriza navegación con una mano, lectura breve y retroalimentación visual clara, con una arquitectura preparada para ampliar recorridos y contenidos sin rehacer la interfaz.",
-    stack: ["React Native", "Flutter", "Figma", "Diseño de interacción"],
+      "La guía acompaña al visitante por el Cerro Nutibara y el Pueblito Paisa mediante un mapa ilustrado interactivo, puntos de interés clicables, escaneo de códigos QR y misiones gamificadas. La experiencia móvil prioriza navegación con una mano, lectura breve y retroalimentación visual clara.",
+    stack: ["MIT App Inventor", "Flutter", "Figma", "Diseño de interacción"],
     highlights: [
-      "Rutas guiadas con puntos de interés georreferenciados.",
-      "Contenido cultural breve y navegación móvil cómoda.",
-      "Sistema visual extensible para nuevos recorridos.",
+      "Mapa interactivo personalizado con puntos de interés clicables.",
+      "Escaneo de códigos QR y sistema de misiones para visitantes.",
+      "Interfaz móvil pensada para recorridos culturales al aire libre.",
     ],
     repoUrl: "https://github.com/Mag-Gonzalez",
     preview: {
@@ -105,24 +122,24 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Experiencia web inspirada en interfaces experimentales con animaciones reactivas y personaje modular.",
     description:
-      "Este portafolio explora una narrativa de interfaz donde el personaje y el panel de contenido responden a gestos del puntero. La capa visual se mantiene separada del contenido mediante un bus de eventos tipado, permitiendo sustituir el placeholder 2D por un avatar 3D sin reescribir la UI. El responsive es real: móvil, tablet y escritorio conservan las mismas secciones y funciones.",
+      "Este portafolio explora una narrativa de interfaz donde el personaje cel-shading y los paneles laterales responden a gestos del puntero. La capa visual se mantiene separada del contenido mediante un bus de eventos tipado, permitiendo integrar mi avatar estilizado modelado en Blender sin reescribir la UI.",
     stack: ["React", "Next.js", "TypeScript", "GSAP", "Blender"],
     highlights: [
       "Arquitectura por capas con estado plano y eventos tipados.",
-      "Panel con scroll interno, tabs rápidas y copia de email.",
+      "Paneles deslizables desde los bordes con cambio de tema oscuro/claro.",
       "Vista detallada de proyectos en media layer con navegación.",
     ],
-    repoUrl: "https://github.com/Mag-Gonzalez",
+    repoUrl: "https://github.com/Mag-Gonzalez/PortafolioAvatar",
     preview: {
-      accent: "#1c1c1c",
-      glyph: "AL",
+      accent: "#ff5a1f",
+      glyph: "MG",
       caption: "Interacción & personaje",
     },
   },
 ];
 
 export const contact = {
-  // [PENDIENTE] Email placeholder: cambiar por el correo definitivo cuando se confirme.
-  email: "contacto@mag-gonzalez.dev",
+  email: "miguelgonza11425@gmail.com",
   githubUrl: "https://github.com/Mag-Gonzalez",
+  artistAlias: "ZARFA",
 } as const;

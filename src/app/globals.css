@@ -748,35 +748,6 @@ body.has-scroll-carousel {
   }
 }
 
-.mobile-switch {
-  position: fixed;
-  top: clamp(0.75rem, 2vw, 1.5rem);
-  right: clamp(0.75rem, 2vw, 1.5rem);
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 2px solid var(--color-white);
-  border-radius: 999px;
-  background: var(--color-black);
-  color: var(--color-white);
-  cursor: pointer;
-  pointer-events: auto;
-  touch-action: manipulation;
-}
-
-.mobile-switch.is-on {
-  background: var(--color-white);
-  color: var(--color-black);
-}
-
-.mobile-switch__visual {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
 /* ---------- Sobre mí & Stack ---------- */
 
 .about__layout {
