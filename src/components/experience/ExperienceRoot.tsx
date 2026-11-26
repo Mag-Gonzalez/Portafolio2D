@@ -3,10 +3,10 @@
 import { useEffect, type ReactNode } from "react";
 import { experienceBus } from "@/lib/eventBus";
 import { createKonamiDetector } from "@/lib/konami";
-import { actions, FACE_TITLES, usePortfolioStore } from "@/store/portfolioStore";
+import { actions, usePortfolioStore } from "@/store/portfolioStore";
 
 export default function ExperienceRoot({ children }: { children: ReactNode }) {
-  const { face, scrollLocked, activeProjectId, media, ui, scrollIndex } =
+  const { scrollLocked, activeProjectId, media, ui, scrollIndex } =
     usePortfolioStore();
 
   // Conecta el bus documentado con el store plano. El placeholder no tiene
@@ -62,10 +62,6 @@ export default function ExperienceRoot({ children }: { children: ReactNode }) {
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, []);
-
-  useEffect(() => {
-    document.title = FACE_TITLES[face];
-  }, [face]);
 
   useEffect(() => {
     document.body.classList.toggle("has-scroll-lock", scrollLocked);

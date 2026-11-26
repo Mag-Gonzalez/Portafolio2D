@@ -47,10 +47,10 @@ export interface PortfolioState {
 }
 
 export const FACE_TITLES: Record<FaceState, string> = {
-  default: "Adrien Lamy :D",
-  surprised: "Adrien Lamy :o",
-  frowning: "Adrien Lamy x/",
-  frank: "frank leboeuf :D",
+  default: "Miguel Ángel González :3",
+  surprised: "Miguel Ángel González :o",
+  frowning: "Miguel Ángel González x/",
+  frank: "Miguel Ángel González :3",
 };
 
 const initialState: PortfolioState = {

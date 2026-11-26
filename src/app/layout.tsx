@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Miguel Ángel González :D",
+  title: "Miguel Ángel González :3",
   description: "Portafolio interactivo 2D de Miguel Ángel González Muñoz.",
 };
 
