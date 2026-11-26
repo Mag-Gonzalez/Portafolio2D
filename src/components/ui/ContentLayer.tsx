@@ -6,7 +6,6 @@ import { experienceBus, type PanelSide } from "@/lib/eventBus";
 import { usePortfolioStore } from "@/store/portfolioStore";
 import About from "./About";
 import Contact from "./Contact";
-import MobileSwitch from "./MobileSwitch";
 import PanelHandle from "./PanelHandle";
 import ProjectList from "./ProjectList";
 import ScrollCarousel from "./ScrollCarousel";
@@ -41,7 +40,6 @@ export default function ContentLayer() {
     const onPointerDown = (event: globalThis.PointerEvent) => {
       if (shellsRef.current?.contains(event.target as Node)) return;
       const element = event.target instanceof Element ? event.target : null;
-      if (element?.closest(".mobile-switch")) return;
       if (element?.closest(".panel-handle-wrap")) return;
       experienceBus.emit({ type: "UI_HIDE" });
     };
@@ -62,7 +60,41 @@ export default function ContentLayer() {
       <main className="page view-home">
         <h1 className="sr-only">Who am I? {profile.name}</h1>
         <h2 className="sr-only">{profile.role}</h2>
-        <MobileSwitch />
+
+        {ui === "hidden" && scrollIndex === 0 && (
+          <>
+            <div className="home-intro" aria-hidden="true">
+              <span className="home-intro__eyebrow">¿QUIÉN SOY?</span>
+              <span className="home-intro__title">
+                <span>MIGUEL ÁNGEL</span>
+                <span>GONZÁLEZ</span>
+              </span>
+            </div>
+            <div className="home-me" aria-hidden="true">
+              <span className="home-me__label">yo</span>
+              <svg
+                className="home-me__arrow"
+                viewBox="0 0 64 26"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 15.5C18 13.5 34 12.5 55 12"
+                  stroke="currentColor"
+                  strokeWidth="3.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M44 5.5C49 8.5 54 10.5 58 12C53.5 14.5 48.5 17.5 43.5 21.5"
+                  stroke="currentColor"
+                  strokeWidth="3.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </>
+        )}
 
         <div ref={shellsRef} className="panel-shells">
           {PANELS.map((side) => {

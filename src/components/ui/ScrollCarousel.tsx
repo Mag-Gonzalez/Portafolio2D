@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties } from "react";
 import { experienceBus } from "@/lib/eventBus";
-import { usePortfolioStore } from "@/store/portfolioStore";
+import { portfolioStore, usePortfolioStore } from "@/store/portfolioStore";
 import About from "./About";
 import Contact from "./Contact";
 import ProjectList from "./ProjectList";
@@ -36,24 +36,46 @@ export default function ScrollCarousel() {
       });
     };
 
+    const shouldIgnoreGesture = (target: EventTarget | null) => {
+      const { ui, panelDragSide, media, activeProjectId } =
+        portfolioStore.getSnapshot();
+      if (ui === "visible" || panelDragSide !== null || media || activeProjectId) {
+        return true;
+      }
+      if (!(target instanceof Element)) return false;
+      return Boolean(
+        target.closest(".panel-handle-wrap, .side-panel, .media-layer"),
+      );
+    };
+
     const onWheel = (event: WheelEvent) => {
+      if (shouldIgnoreGesture(event.target)) return;
       if (Math.abs(event.deltaY) < 8) return;
       event.preventDefault();
       step(event.deltaY > 0 ? 1 : -1);
     };
 
     const onTouchStart = (event: TouchEvent) => {
+      if (shouldIgnoreGesture(event.target)) {
+        touchRef.current = null;
+        return;
+      }
       touchRef.current = event.touches[0]?.clientY ?? null;
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (touchRef.current !== null) event.preventDefault();
+      if (touchRef.current === null) return;
+      if (shouldIgnoreGesture(event.target)) {
+        touchRef.current = null;
+        return;
+      }
+      event.preventDefault();
     };
 
     const onTouchEnd = (event: TouchEvent) => {
       const startY = touchRef.current;
       touchRef.current = null;
-      if (startY === null) return;
+      if (startY === null || shouldIgnoreGesture(event.target)) return;
       const endY = event.changedTouches[0]?.clientY;
       if (endY === undefined) return;
       const delta = startY - endY;

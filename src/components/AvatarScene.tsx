@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import gsap from "gsap";
+import MorphSVGPlugin from "gsap/MorphSVGPlugin";
 import { experienceBus } from "@/lib/eventBus";
 import { actions, usePortfolioStore } from "@/store/portfolioStore";
 
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(MorphSVGPlugin);
+}
+
 const INK = "#1c1c1c";
-const RED = "#fa0b35";
+const BG_ORANGE = "#ff5a1f";
 const WHITE = "#ffffff";
 
-// Seis dibujos vectoriales, uno por panel de avatar_new_faces.png.
+// Trazos [OBSERVADOS] en los seis paneles de avatar_new_faces.png.
+// El dibujo base es el panel 0; de los demás solo se toman formas de boca.
 // Se ordenan de mayor a menor área para que los rellenos no tapen los trazos finos.
 type PanelPath = { fill: "ink" | "white"; d: string };
 const PANEL_PATHS: PanelPath[][] = [
@@ -229,6 +235,90 @@ const PANEL_BY_FACE = {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
+// [OBSERVADO] El personaje base es el dibujo normal. Solo se animan las piezas
+// faciales en su sitio: ojos, ceja y boca. El resto de trazos nunca se cambia.
+type PathMetric = {
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  fill: "ink" | "white";
+};
+
+const metricsOf = (d: string, fill: "ink" | "white"): PathMetric => {
+  const numbers = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  const xs = numbers.filter((_, index) => index % 2 === 0);
+  const ys = numbers.filter((_, index) => index % 2 === 1);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  return {
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    w: maxX - minX,
+    h: maxY - minY,
+    fill,
+  };
+};
+
+// [ESTIMADO] Las bocas observadas se reacentran sobre la boca base para que
+// se abran sin desplazar ningún elemento de la cara.
+const alignD = (d: string, cx: number, cy: number): string => {
+  const metric = metricsOf(d, "ink");
+  const dx = cx - metric.cx;
+  const dy = cy - metric.cy;
+  let index = 0;
+  return d.replace(/-?\d+(?:\.\d+)?/g, (value) => {
+    const next = Number(value) + (index % 2 === 0 ? dx : dy);
+    index += 1;
+    return String(Math.round(next * 10) / 10);
+  });
+};
+
+const BASE_PATHS = PANEL_PATHS[0];
+const BASE_MOUTH = BASE_PATHS[12];
+const MOUTH_CENTER = metricsOf(BASE_MOUTH.d, "ink");
+const EYE_ORIGINS = [
+  metricsOf(BASE_PATHS[7].d, "ink"),
+  metricsOf(BASE_PATHS[10].d, "ink"),
+];
+const BROW_ORIGIN = metricsOf(BASE_PATHS[9].d, "ink");
+const EYE_INDICES = [7, 8, 10, 11];
+
+const mouthVariant = (panel: number, inkIndex: number, whiteIndex: number) => ({
+  ink: alignD(PANEL_PATHS[panel][inkIndex].d, MOUTH_CENTER.cx, MOUTH_CENTER.cy),
+  white: alignD(PANEL_PATHS[panel][whiteIndex].d, MOUTH_CENTER.cx, MOUTH_CENTER.cy),
+  whiteOpacity: 1,
+});
+
+const CLOSED_MOUTH = {
+  ink: BASE_MOUTH.d,
+  white: BASE_MOUTH.d,
+  whiteOpacity: 0,
+};
+
+const OPEN_MOUTH = mouthVariant(1, 8, 7);
+
+const MOUTH_VARIANTS = [
+  CLOSED_MOUTH,
+  OPEN_MOUTH,
+  mouthVariant(2, 8, 7),
+  mouthVariant(3, 9, 8),
+  mouthVariant(4, 15, 14),
+  OPEN_MOUTH,
+];
+
+const EYE_SCALE = [1, 1.12, 0.62, 1, 1, 1.12];
+const BROW_POSE = [
+  { y: 0, rotation: 0 },
+  { y: -3, rotation: -3 },
+  { y: 2, rotation: -7 },
+  { y: 0, rotation: 0 },
+  { y: -2, rotation: -2 },
+  { y: -3, rotation: -3 },
+];
+
 type QuickSetter = ((value: number) => void) | null;
 type ReleaseStep = 0 | 1 | null;
 
@@ -236,14 +326,19 @@ export default function AvatarScene() {
   const rootRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<SVGGElement>(null);
   const headInnerRef = useRef<SVGGElement>(null);
-  const faceGroupRef = useRef<SVGGElement>(null);
   const bodyRef = useRef<SVGGElement>(null);
+  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
 
   const parallaxXTo = useRef<QuickSetter>(null);
   const parallaxYTo = useRef<QuickSetter>(null);
   const headDragRef = useRef<{ startX: number; startY: number } | null>(null);
   const headHoveredRef = useRef(false);
   const releaseTimersRef = useRef<number[]>([]);
+  const mouthWhiteRef = useRef<SVGPathElement>(null);
+  const lastExpressionRef = useRef(0);
+  const lastExpressionAtRef = useRef(0);
+  const eyeScaleRef = useRef(1);
+  const blinkCallRef = useRef<gsap.core.Tween | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [draggingPart, setDraggingPart] = useState<"head" | null>(null);
   const [releaseStep, setReleaseStep] = useState<ReleaseStep>(null);
@@ -314,33 +409,131 @@ export default function AvatarScene() {
     });
   }, [ui, panelDragging, panelDragProgress, reducedMotion]);
 
-  const activePanel =
+  const expression =
     face === "frank" ? 5 : releaseStep === 0 ? 3 : releaseStep === 1 ? 4 : PANEL_BY_FACE[face];
 
+  // Solo se animan piezas faciales; el dibujo base permanece inmóvil.
   useEffect(() => {
-    const group = faceGroupRef.current;
-    if (!group) return;
+    if (expression === lastExpressionRef.current) return;
+    const variant = MOUTH_VARIANTS[expression];
+    const mouth = pathRefs.current[12];
+    const mouthWhite = mouthWhiteRef.current;
+    const brow = pathRefs.current[9];
+    const eyes = EYE_INDICES.map((index) => pathRefs.current[index]);
+    const browPose = BROW_POSE[expression];
+    const eyeScale = EYE_SCALE[expression];
+
     if (reducedMotion) {
-      gsap.set(group, { autoAlpha: 1, y: 0 });
-      return;
+      mouth?.setAttribute("d", variant.ink);
+      if (mouthWhite) {
+        mouthWhite.setAttribute("d", variant.white);
+        mouthWhite.style.opacity = String(variant.whiteOpacity);
+      }
+      eyes.forEach((element, index) => {
+        if (!element) return;
+        const origin = EYE_ORIGINS[index < 2 ? 0 : 1];
+        gsap.set(element, {
+          scaleY: eyeScale,
+          svgOrigin: `${origin.cx} ${origin.cy}`,
+        });
+      });
+      if (brow) {
+        gsap.set(brow, {
+          ...browPose,
+          svgOrigin: `${BROW_ORIGIN.cx} ${BROW_ORIGIN.cy}`,
+        });
+      }
+    } else {
+      lastExpressionAtRef.current = Date.now();
+      if (mouth) {
+        gsap.to(mouth, {
+          morphSVG: variant.ink,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
+      if (mouthWhite) {
+        gsap.to(mouthWhite, {
+          morphSVG: variant.white,
+          opacity: variant.whiteOpacity,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
+      eyes.forEach((element, index) => {
+        if (!element) return;
+        const origin = EYE_ORIGINS[index < 2 ? 0 : 1];
+        gsap.to(element, {
+          scaleY: eyeScale,
+          svgOrigin: `${origin.cx} ${origin.cy}`,
+          duration: 0.3,
+          ease: "back.out(1.4)",
+          overwrite: "auto",
+        });
+      });
+      if (brow) {
+        gsap.to(brow, {
+          ...browPose,
+          svgOrigin: `${BROW_ORIGIN.cx} ${BROW_ORIGIN.cy}`,
+          duration: 0.3,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
     }
-    gsap.fromTo(
-      group,
-      { autoAlpha: 0, y: 5 },
-      {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.2,
-        ease: "back.out(1.6)",
-        overwrite: "auto",
-      },
-    );
-  }, [activePanel, reducedMotion]);
+
+    eyeScaleRef.current = eyeScale;
+    lastExpressionRef.current = expression;
+  }, [expression, reducedMotion]);
+
+  // [ESTIMADO] Parpadeo idle sobre los mismos trazos de los ojos, sin moverlos.
+  useEffect(() => {
+    if (reducedMotion) return;
+    let cancelled = false;
+
+    const blink = () => {
+      if (cancelled) return;
+      if (Date.now() - lastExpressionAtRef.current > 500 && !headDragRef.current) {
+        const scale = eyeScaleRef.current;
+        EYE_INDICES.forEach((index, eyeIndex) => {
+          const element = pathRefs.current[index];
+          if (!element) return;
+          const origin = EYE_ORIGINS[eyeIndex < 2 ? 0 : 1];
+          const svgOrigin = `${origin.cx} ${origin.cy}`;
+          gsap
+            .timeline()
+            .to(element, {
+              scaleY: scale * 0.12,
+              svgOrigin,
+              duration: 0.075,
+              ease: "power2.in",
+              overwrite: "auto",
+            })
+            .to(element, {
+              scaleY: scale,
+              duration: 0.1,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+        });
+      }
+      blinkCallRef.current = gsap.delayedCall(2.2 + Math.random() * 2.2, blink);
+    };
+
+    blinkCallRef.current = gsap.delayedCall(2.2, blink);
+    return () => {
+      cancelled = true;
+      blinkCallRef.current?.kill();
+    };
+  }, [reducedMotion]);
 
   useEffect(
     () => () => {
       releaseTimersRef.current.forEach((timer) => window.clearTimeout(timer));
       releaseTimersRef.current = [];
+      blinkCallRef.current?.kill();
     },
     [],
   );
@@ -447,7 +640,7 @@ export default function AvatarScene() {
       ref={rootRef}
       className={`webgl-container avatar-scene${draggingPart ? ` is-${draggingPart}-dragging` : ""}`}
       data-engine="svg-2d"
-      style={{ background: RED }}
+      style={{ background: BG_ORANGE }}
       onPointerMove={handleSceneMove}
       onPointerLeave={handleSceneLeave}
     >
@@ -470,19 +663,31 @@ export default function AvatarScene() {
           <ellipse cx="504" cy="620" rx="380" ry="560" fill="transparent" />
           <g ref={headInnerRef} className="avatar__head-inner">
             <g
-              ref={faceGroupRef}
               className="avatar__face-group"
               data-face={face}
-              data-panel={activePanel}
+              data-expression={expression}
             >
               <g ref={bodyRef} className="avatar__torso" transform="scale(2.52)">
-                {PANEL_PATHS[activePanel].map((item, index) => (
-                  <path
-                    key={`${activePanel}-${index}`}
-                    d={item.d}
-                    fill={item.fill === "ink" ? INK : WHITE}
-                    fillRule="evenodd"
-                  />
+                {BASE_PATHS.map((item, slot) => (
+                  <Fragment key={slot}>
+                    {slot === 12 && (
+                      <path
+                        ref={mouthWhiteRef}
+                        d={MOUTH_VARIANTS[0].white}
+                        fill={WHITE}
+                        fillRule="evenodd"
+                        opacity={MOUTH_VARIANTS[0].whiteOpacity}
+                      />
+                    )}
+                    <path
+                      ref={(element) => {
+                        pathRefs.current[slot] = element;
+                      }}
+                      d={item.d}
+                      fill={item.fill === "ink" ? INK : WHITE}
+                      fillRule="evenodd"
+                    />
+                  </Fragment>
                 ))}
               </g>
             </g>
