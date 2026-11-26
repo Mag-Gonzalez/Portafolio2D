@@ -33,7 +33,7 @@ export const profile = {
   bio: [
     "Soy desarrollador de software en formación en Análisis y Desarrollo de Software (ADSO - SENA) en Medellín. Construyo experiencias web y móviles creativas, combinando interfaces expresivas en dark-mode con animación reactiva.",
     "Diseño y consumo APIs robustas con Python/Django y Node.js/Express, integrando bases de datos relacionales y NoSQL para que la lógica de negocio, las automatizaciones y la experiencia de usuario convivan sin fricción.",
-    "Exploro el cruce entre código, 3D en Blender y estética cartoon cel-shading —influenciada por mi proyecto musical ZARFA— para crear productos digitales con identidad propia sin sacrificar rendimiento ni accesibilidad.",
+    "Me interesa el cruce entre código, diseño de interfaces e interacción expresiva para crear productos digitales con identidad propia sin sacrificar rendimiento ni accesibilidad.",
   ],
 } as const;
 
@@ -56,13 +56,12 @@ export const stack: StackCategory[] = [
     ],
   },
   {
-    category: "Mobile/3D & Tools",
+    category: "Mobile & Tools",
     items: [
       "React Native",
       "Expo",
       "Flutter",
       "MIT App Inventor",
-      "Blender 5.3",
       "Git / GitHub",
       "Docker",
     ],
@@ -122,8 +121,8 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Experiencia web inspirada en interfaces experimentales con animaciones reactivas y personaje modular.",
     description:
-      "Este portafolio explora una narrativa de interfaz donde el personaje cel-shading y los paneles laterales responden a gestos del puntero. La capa visual se mantiene separada del contenido mediante un bus de eventos tipado, permitiendo integrar mi avatar estilizado modelado en Blender sin reescribir la UI.",
-    stack: ["React", "Next.js", "TypeScript", "GSAP", "Blender"],
+      "Este portafolio explora una narrativa de interfaz donde el avatar y los paneles laterales responden a gestos del puntero. La capa visual se mantiene separada del contenido mediante un bus de eventos tipado, permitiendo integrar un personaje estilizado sin reescribir la UI.",
+    stack: ["React", "Next.js", "TypeScript", "GSAP"],
     highlights: [
       "Arquitectura por capas con estado plano y eventos tipados.",
       "Paneles deslizables desde los bordes con cambio de tema oscuro/claro.",
@@ -141,5 +140,4 @@ export const portfolioProjects: PortfolioProject[] = [
 export const contact = {
   email: "miguelgonza11425@gmail.com",
   githubUrl: "https://github.com/Mag-Gonzalez",
-  artistAlias: "ZARFA",
 } as const;
